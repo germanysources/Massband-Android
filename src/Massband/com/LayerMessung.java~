@@ -1,0 +1,158 @@
+package Massband.com;
+
+import java.io.*;
+import android.hardware.SensorManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorEvent;
+import android.content.Context;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.lang.*;
+import android.util.Log;
+
+public abstract class LayerMessung implements SensorEventListener{
+   private final String trenn = ";", filename = "massbandcalib";
+
+   // Massband-Funktion fuer Handys mit Winkel und Beschleunigungssensor    
+   protected volatile List<Sensor> sensors;
+   public volatile float add[], err[];
+   public volatile SensorManager sman;
+   
+   protected Context context;
+
+   public LayerMessung(Context context) throws RuntimeException, InterruptedException, FileNotFoundException, IOException {
+      sensors = new ArrayList<Sensor>();
+      this.get_sensors(context);
+      this.add = new float[3];
+      this.err = new float[3];
+      this.context = context;	
+      new_messung("");
+
+   }
+   protected abstract void new_messung(String action){
+   }
+
+   public void load_calib(){
+      try{
+	 this.read_calib(add, err, context);
+      }
+      catch(FileNotFoundException e){
+	 calib_start();
+      }
+      catch(IOException e){
+	 calib_start();
+      }
+      catch(IndexOutOfBoundsException e){
+	 calib_start();
+      }
+   }
+
+   protected abstract synchronized void get_sensors(Context context) throws RuntimeException{	
+   }
+
+   /*   public void calib_start(Context context) { 
+      // executor.execute(new Runnable() {
+      // 			  @Override
+      // 			  public void run() {
+      // 			     try {
+				// Kalibrieren
+				float[] init_a = {0, 0, 0};
+				// Log.d("gui_massb", "Thread begonnen\t" + Thread.currentThread());
+				mess_beg(mass.CALIB, init_a);
+	 // 		     } catch (RuntimeException e) {
+	 // 			Log.w("gui_massb", e.getMessage());
+	 // 		     }
+	 // 		  }
+	 // }
+	 // );
+	 }*/
+   public abstract synchronized void calib_start(){
+   }
+
+   public abstract synchronized void calib_end(byte return_code){
+   }
+
+   public synchronized void read_calib(float[] add, float[] err, Context context) throws FileNotFoundException, IOException {
+      // Kalibrierungsdaten aus internal Storage lesen
+      FileInputStream inputStream;	
+      int pos2, pos1, j;
+      char[] calibfile = new char[2];
+      String l_mem;
+		
+      inputStream = context.openFileInput(filename);
+      BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+	       
+      l_mem = br.readLine();
+      l_mem.getChars(0, l_mem.length(),calibfile,0);
+      pos2 = calibfile.length - 1;
+      pos1 = pos2;
+      j = 6;
+      for(int i=pos1; i>0; i++){
+	 if(new String(calibfile, i, 1) == trenn){
+	    l_mem = new String(calibfile, i+1, pos2 - i);
+	    j--;
+	    if(j > 2){
+	       err[j-3] = Float.parseFloat(l_mem);
+	    }
+	    else{
+	       add[j] = Float.parseFloat(l_mem);
+	    }
+	    pos2 = i - 1;
+	 }
+      }
+
+   }
+
+    
+   public synchronized void mess_beg(String action) {
+      new_messung(action);
+      for(Sensor s:sensors) {
+	 erste_messung = true;
+	 boolean sevt = sman.registerListener(this, s, SensorManager.SENSOR_DELAY_GAME);
+	 Log.d("gui_massb", "Messung begonnen mit Aktion " + action);
+	 if(sevt == false){
+	     throw new RuntimeException(new Integer(R.string.Ereg).toString());
+	 }
+      }
+   }
+
+   public synchronized void mess_end() {
+      for(Sensor s:sensors){
+	 sman.unregisterListener(this, s);
+      }
+      corf_mass.test_end_log();
+      Log.d("gui_massb", "Messung beendet");
+   }    
+    public abstract void onSensorChanged(SensorEvent event)
+    throws RuntimeException{
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy){	
+    }
+
+   public synchronized void write_calib(Context context) throws FileNotFoundException, IOException{
+      // Kalibrierungsdaten auf interal Storage speichern
+      // Integral - g (add), und Integral(Messwert-g)^2 (err) und daraus Wurzel
+      
+      StringBuilder filecon = new StringBuilder();
+      for(int i = 0;i < add.length; i++) {
+	 filecon.append(add[i]);
+	 filecon.append(trenn);
+      }
+      for(int i = 0;i < err.length; i++) {
+	 filecon.append(err[i]);
+	 filecon.append(trenn);
+      }      
+      FileOutputStream outputStream;
+	       
+      outputStream = context.openFileOutput(filename, Context.MODE_PRIVATE);
+      outputStream.write(filecon.toString().getBytes());
+      outputStream.close();
+   }
+   
+}
+
+
+

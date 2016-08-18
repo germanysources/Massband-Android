@@ -39,24 +39,44 @@ public class mass{
 	testc = new ArrayList<float[]>();
     }
     public void calibs(List<float[]> valb, float deltime) throws
-	RuntimeException{
+   RuntimeException{
 	// ein Schritt zum Kalibrieren
 	// Beschleunigung zum Weg integrieren
 	//deltime: Zeitdifferenz fuer Aenderung der Besschleunigung	
 	int len = valb.size() - 1;
 	float be1[] = beschl(valb.get(len-1));
 	float be2[] = beschl(valb.get(len));       
-		
-	tim_sum += deltime;
-	for(int i= 0; i<3;i++){
-	    String mes = "Messwerte \t" + new Float(be1[i]).toString() + "\t" + new Float(be2[i]).toString() + "\t" + new Float(deltime).toString(); 
-	    Log.d("gui_massb",mes);
-	    speed[i] += deltime * 0.5f * (be1[i]+be2[i]);	      
-	    mes = "Weg, Geschw \t" + new Float(distance[i]).toString() + "\t" + speed[i];
-	    Log.d("gui_massb", mes);
+	float rot[] = new float[9]; //Rotationsmatrix Erdbeschleunigung
+	float mrot[] = new float[9]; // Rotationsmatrix geomagnetisches Feld
+	float gemag[] = new float[3]; //Zwischenspeicher
+	gemag[0] = 20;
+	gemag[1] = 0;
+	gemag[2] = 44;
+	boolean rc = SensorManager.getRotationMatrix(rot, mrot, be2, gemag);
+	Log.d("gui_massb", "Return Rotation" + rc);
+	if(rc == true){
+	   gemag = rotspeed(rot, be1);
+	   be1 = gemag;
+	   gemag = rotspeed(rot, be2);
+	   be2 = gemag;
+	   for(int i=0;i<3;i++){
+	      be1[i] += calib_val[i] + g[i];
+	      be2[i] += calib_val[i] + g[i];
+	   }
+	   tim_sum += deltime;
+	   for(int i= 0; i<3;i++){
+	      String mes = "Messwerte \t" + new Float(be1[i]).toString() + "\t" + new Float(be2[i]).toString() + "\t" + new Float(deltime).toString(); 
+	      Log.d("gui_massb",mes);
+	      speed[i] += deltime * 0.5f * (be1[i]+be2[i]);	      
+	      mes = "Weg, Geschw \t" + new Float(distance[i]).toString() + "\t" + speed[i];
+	      Log.d("gui_massb", mes);
+	   }
+	}
+	else{
+	    throw new RuntimeException(new Integer(R.string.Ecalib_end).toString());
 	}
     }
- 
+
     public void calib_end() throws RuntimeException{ 
 	float rot[] = new float[9];
 	float mrot[] = new float[9];
@@ -70,12 +90,7 @@ public class mass{
 	boolean rc = SensorManager.getRotationMatrix(rot, mrot, calib_val, gemag);
 	if(rc == true){	
 	    // Umrechnen in globalen Koordinaten, 
-	    // Mittelwert Beschleunigung mit Gravitation-Komponenten
-	    // Moeglich waere: Kalibrierungskomponente in Handykoordinationsystem
-	    // + Gravitation
-	    // Hier wird baer davon ausgegangen, dass Kalibrierungskomponente
-	    // im globalen Koordinationsystem immer gleich ist
-	    
+	    // Mittelwert Beschleunigung - Gravitation
 	   Log.d("gui_massb", "Geschwindigkeit");
 	    gemag = rotspeed(rot, speed);
 	    Log.d("gui_massb", "gemag[0]" + gemag[0] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
@@ -122,12 +137,12 @@ public class mass{
 	float be1[] = beschl(valb.get(len - 1));
 	float be2[] = beschl(valb.get(len));
 	for(int i=0;i<3;i++){
-	    be1[i] += getCalibVal(i);
-	    be2[i] += getCalibVal(i);
+	    be1[i] += getCalibVal(i) + g[i];
+	    be2[i] += getCalibVal(i) + g[i];
 	}
 	timSumMem += deltime;
 	for(int i=0;i<3;i++){
-	    amem[i] += 0.5f*(be1[i]+be2[i])*deltime;
+	    amem[i] += 0.5f*(be1[i]+be2[i]);
 	}
 	if(len % LengthSensorValues == 0){
 	    tim_sum += timSumMem;
@@ -179,8 +194,8 @@ public class mass{
 	float pko[] = new float[3];
 	for(int i =0;i<3;i++){
 	    pko[i] = sum1[i]/sum2[i];
-	    pko[i] = ( sum3[i] - pko[i]*2*sum1[i] + pko[i]*pko[i]*sum2[i])/testc.size(); 
-	    Log.d("gui_massb", "Standardabweichung Parabel \t" + i + "\t" + pko[i]);
+	    pko[i] = sum3[i] - pko[i]*2*sum1[i] + pko[i]*pko[i]*sum2[i]; 
+	Log.d("gui_massb", "Standardabweichung Parabel \t" + i + "\t" + pko[i]);
 	}
 
     }

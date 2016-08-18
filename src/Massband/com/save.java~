@@ -1,0 +1,46 @@
+package Massband.com;
+import android.database.sqlite.*;
+
+public abstract class PrepareSave extends SQLiteOpenHelper{    
+    // If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "Massband.db";    
+    public static abstract class TheColumns{
+	public static final String TableName = "MESSUNGEN",
+	    TimeStamp = "TIMESTAMP", // Zeitstempel Schlüssel
+	    Project = "PROJECT",  // Projekt Schlüssel
+	    Description = "DEST", // Beschreibung Messung Schlüssel
+	    Distancex = "DISTANCEX", // Distanz x
+	    Distancey = "DISTANCEY", // Distanz y
+	    Distancez = "DISTANCEZ", // Distanz z
+	    Unit = "UNIT", // Einheit
+	    OnExternalStorage = "STORAGE"; // die Bilder können extern oder intern gespeichert sein	
+
+	// do to:
+	// eventuell kann das Projekt mit den Aufgabe synchronisiert werden
+	// d.h. Auswahl erfolgt ueber Aufgaben in einer Kalender-App
+    }
+    private static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS" + TableName;
+    private static final String SQL_CREATE_ENTRIES = "CREATE TABLE " + TheColumns.TableName + " ("
+	+ TheColumns.TimeStamp + " DECIMAL(19,0) " + TheColumns.Project + " VARCHAR(10) " 
+	+ TheColumns.Description + " VARCHAR(40) " + TheColumns.Distancex + " DECIMAL(10,3) "
+	+ TheColumns.Distancey + " DECIMAL(10,3) " + TheColumns.Distancez + " DECIMAL(10,3) "
+	+ TheColumns.Unit + " CHAR(3) " + TheColumns.OnExternalStorage + " CHAR(1) )" 
+	+ " PRIMARY KEY (" + TheColumns.TimeStamp + " , " + TheColumns.Project + " , "
+	+ TheColumns.Description + " )"; 
+
+    public FeedReaderDbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+    public void onCreate(SQLiteDatabase db) {
+	
+        db.execSQL(SQL_CREATE_ENTRIES);
+    }
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {  
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);
+    }
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
+    }
+}    

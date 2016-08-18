@@ -96,7 +96,7 @@ public class mass{
 	    } 
 	}
 	else{
-	    throw new RuntimeException(new Integer(R.string.Ecalib_end).toString());
+	    throw new RuntimeException();
 	}
     }
     private float[] rotspeed(float[] rotation, float[] speed){
@@ -144,7 +144,7 @@ public class mass{
 	    amemlast = amem;
 	    amem = new float[3];
 	    for(int i=0;i<len;i++){
-		valb.remove(0);
+		valb.remove(i);
 	    }
 	    distance[3] = (float)Math.sqrt(distance[0]*distance[0]+distance[1]*distance[1]+
 					   distance[2]*distance[2]);    
@@ -208,7 +208,7 @@ public class mass{
 				distance[2]*distance[2]);
 	
     }
-    private float koord[][] = {{1, 0, 0},{0,1,0},{0,0,1}};//Umrechnungsmatrix in
+    private static float koord[][] = {{1, 0, 0},{0,1,0},{0,0,1}};//Umrechnungsmatrix in
     // Spalten
     public float[] beschl(float[] sens_val){
 	// Beschleunigung in Ursprungskoordinaten
