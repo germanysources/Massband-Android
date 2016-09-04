@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="begend">Beginn/Ende</string>
+  <string name="app_name">Massband</string>
+  <string name="Ecalib">Waehrend Kalibrierung Handy bitte nicht bewegen</string>
+  <string name="Ecalib_end">Waehrend Kalibrierung Handy bitte nicht bewegen. Sonst koennen die Werte nicht ermittelt werden.</string>
+  <string name="Esensor">Sensoren fehlen. Die App braucht mindestens ein Beschleunigungssensor, noch besser ist ein Gyrosscop. Damit wird die Messung genauer.</string>
+  <string name="Esave">Fehler beim Abspeichern der Kalibrierung</string>
+  <string name="Ssave">Kalibrierung erfolgreich</string>
+  <string name="Ereg">Der Sensor kann nicht angesprochen werden. Probieren Sie die Messung nach einer Weile nochmal</string>
+  <string name="Estart">Gerade am Kalibrieren. Warten Sie einen Moment und starten Sie die Messung</string>
+  <string name="Distx">Distanz x</string>
+  <string name="Disty">Distanz y </string>
+  <string name="Distz">Hoehe</string>
+  <string name="Eread_calib">Kalibrierungsdaten nicht gefunden</string>
+</resources>  

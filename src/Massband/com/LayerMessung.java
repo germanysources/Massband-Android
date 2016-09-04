@@ -35,14 +35,14 @@ public abstract class LayerMessung implements SensorEventListener{
     protected abstract void new_messung(String action);
 
    public void load_calib(){
-      try{
-	 this.read_calib(add, err, context);
-      }
-      catch(RuntimeException e){
-	  Erfolg ef = new Erfolg(e.getMessage(), context);
-	  ef.show();
+      // try{
+      // 	 this.read_calib(add, err, context);
+      // }
+      // catch(RuntimeException e){
+      // 	  Erfolg ef = new Erfolg(e.getMessage(), context);
+      // 	  ef.show();
 	  calib_start();
-      }   
+      // }   
  
    }
 

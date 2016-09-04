@@ -40,7 +40,7 @@ public class massband extends LayerMessung{
       valb = new LinkedList<float[]>();
       float[] init_a = {0, 0, 0};
       valb.add(init_a);
-      corf_mass = new mass(action, add);
+      corf_mass = new mass(action, add, context);
       erste_messung = true;
    }
    @Override 

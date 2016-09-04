@@ -4,12 +4,15 @@ import java.lang.Math.*;
 import java.util.*;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.content.Context;
 
 public class mass{
     public final static String CALIB = "C", SPEEDM = "S", DISTANCEM = "D";//was wird gemessen	  
     private final float gc[] = {0.0f, 0.0f, -9.81f};
     private int LengthSensorValues = 10;//Sensor-Werte werden erst gemittelt und dann integriert zum Weg
     // dient zur Fehlerverbesserung, 10 Werte sind im Mittel genauer als nur 1 Wert
+
+    Context context;
 
     float g[] = gc; // Erdbeschleunigung
     float calib_val[] = {0, 0, 0}; // Kalibrierungswerte
@@ -23,7 +26,7 @@ public class mass{
     String action;
     List<float[]> testc;//nur zum Test, damit Kalibrierungsmethode stimmt, sollte einigermassen Parabelfoermig sein
 
-    public mass(String action, float[] calib_val){
+   public mass(String action, float[] calib_val, Context c){
 	distance = new float[4];
 	speed = new float[3];
 	distancePart = new float[3];
@@ -37,7 +40,8 @@ public class mass{
 	this.calib_val = calib_val;
 	this.action = action;
 	testc = new ArrayList<float[]>();
-    }
+	context = c;
+   }
     public void calibs(List<float[]> valb, float deltime) throws
 	RuntimeException{
 	// ein Schritt zum Kalibrieren
@@ -57,47 +61,101 @@ public class mass{
 	}
     }
  
-    public void calib_end() throws RuntimeException{ 
-	float rot[] = new float[9];
-	float mrot[] = new float[9];
-	float gemag[] = new float[3];
-	gemag[0] = 20;
-	gemag[1] = 0;
-	gemag[2] = 44;
-	for(int i = 0; i<3;i++){
-	   calib_val[i] = speed[i] / tim_sum;
-	}
-	boolean rc = SensorManager.getRotationMatrix(rot, mrot, calib_val, gemag);
-	if(rc == true){	
-	    // Umrechnen in globalen Koordinaten, 
-	    // Mittelwert Beschleunigung mit Gravitation-Komponenten
-	    // Moeglich waere: Kalibrierungskomponente in Handykoordinationsystem
-	    // + Gravitation
-	    // Hier wird baer davon ausgegangen, dass Kalibrierungskomponente
-	    // im globalen Koordinationsystem immer gleich ist
-	    
-	   Log.d("gui_massb", "Geschwindigkeit");
-	    gemag = rotspeed(rot, speed);
-	    Log.d("gui_massb", "gemag[0]" + gemag[0] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
-	    calib_val[0] = -gemag[0] / tim_sum;
-	    Log.d("gui_massb", "Werte Kalibrierung " + calib_val[0]);
+   protected float[] berechneRotationsmatrix(float[] w){
+      float r = (float) Math.sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+      Log.d("gui_massb", "r: " + r);
+      if(Math.abs(r - 9.81) > 0.1)
+	 throw new RuntimeException(context.getString(R.string.Ecalib) + "\t" + r);
+      float theta = (float) Math.acos(w[2] / r);
+      float phi1 = (float) Math.asin(w[1] / r / Math.sin(theta));
+      float phi2 = (float) Math.acos(w[0] / r / Math.sin(theta));
+      Log.d("gui_massb", "phi1,2,theta: " + phi1 + "\t" + phi2 + "\t" + theta);
+      Log.d("gui_massb", "w: " + w[0] + "\t" + w[1] + "\t" + w[2]);
+      Log.d("gui_massb", "x1,x2,y1,y2: " + r * Math.sin(theta) * Math.cos(phi1) + "\t" +  r * Math.sin(theta) * Math.cos(phi2) + "\t" + r * Math.sin(theta) * Math.sin(phi1) + "\t" +  r * Math.sin(theta) * Math.sin(phi2));
+      float phi;
+      if(Math.sin(theta) * Math.cos(phi1) >= 0.0 && w[0] < 0)
+	 phi = phi2;
+      else
+	 phi = phi1;
+      Log.d("gui_massb", "x',y': " + r * Math.sin(theta) * Math.cos(phi) + "\t" + r * Math.sin(theta) * Math.sin(phi));
+      float[] ret = new float[9];
+      ret[0] = (float) (Math.cos(theta) * Math.cos(phi1));
+      ret[1] = (float) -Math.sin(theta);
+      ret[2] = (float) (Math.cos(theta) * Math.sin(phi1));
+      ret[3] = (float) (Math.sin(theta) * Math.cos(phi1));
+      ret[4] = (float) (Math.cos(theta));
+      ret[5] = (float) (Math.sin(theta) * Math.sin(phi1));
+      ret[6] = (float) -Math.sin(phi1);
+      ret[7] = 0;
+      ret[8] = (float) Math.cos(phi1);
+      return ret;
+   }
 
-	    Log.d("gui_massb", "gemag[1]" + gemag[1] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
-	    calib_val[1] = -gemag[1] / tim_sum;
-	    Log.d("gui_massb", "gemag[2]" + gemag[2] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
-	    Log.d("gui_massb", "Werte Kalibrierung " + calib_val[1]);
-	    calib_val[2] = -gemag[2] / tim_sum;	
-	    Log.d("gui_massb", "Werte Kalibrierung " + calib_val[2]);
-	    // Rotationsmatrix als Klassenattribut speichern
-	    for(int i = 0; i <3;i++){
-	       for(int j = 0;j<3;j++){
-		  koord[i][j] = rot[i+3*j];
-	       }
-	    } 
-	}
-	else{
-	    throw new RuntimeException();
-	}
+    public void calib_end() throws RuntimeException{ 
+       for(int i = 0; i<3;i++){
+	  calib_val[i] = speed[i] / tim_sum;
+       }
+       float[] rot = berechneRotationsmatrix(calib_val);
+       float[] gemag = new float[3];
+       Log.d("gui_massb", "Geschwindigkeit");
+       gemag = rotspeed(rot, speed);
+       Log.d("gui_massb", "gemag[0]" + gemag[0] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+       calib_val[0] = -gemag[0] / tim_sum;
+       Log.d("gui_massb", "Werte Kalibrierung " + calib_val[0]);
+
+       Log.d("gui_massb", "gemag[1]" + gemag[1] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+       calib_val[1] = -gemag[1] / tim_sum;
+       Log.d("gui_massb", "gemag[2]" + gemag[2] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+       Log.d("gui_massb", "Werte Kalibrierung " + calib_val[1]);
+       calib_val[2] = -gemag[2] / tim_sum;	
+       Log.d("gui_massb", "Werte Kalibrierung " + calib_val[2]);
+       // Rotationsmatrix als Klassenattribut speichern
+       for(int i = 0; i <3;i++){
+	  for(int j = 0;j<3;j++){
+	     koord[i][j] = rot[i+3*j];
+	  }
+       }
+
+	// float rot[] = new float[9];
+	// float mrot[] = new float[9];
+	// float gemag[] = new float[3];
+	// gemag[0] = 20;
+	// gemag[1] = 0;
+	// gemag[2] = 44;
+	// for(int i = 0; i<3;i++){
+	//    calib_val[i] = speed[i] / tim_sum;
+	// }
+	// boolean rc = SensorManager.getRotationMatrix(rot, mrot, calib_val, gemag);
+	// if(rc == true){	
+	//     // Umrechnen in globalen Koordinaten, 
+	//     // Mittelwert Beschleunigung mit Gravitation-Komponenten
+	//     // Moeglich waere: Kalibrierungskomponente in Handykoordinationsystem
+	//     // + Gravitation
+	//     // Hier wird baer davon ausgegangen, dass Kalibrierungskomponente
+	//     // im globalen Koordinationsystem immer gleich ist
+	    
+	//    Log.d("gui_massb", "Geschwindigkeit");
+	//     gemag = rotspeed(rot, speed);
+	//     Log.d("gui_massb", "gemag[0]" + gemag[0] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+	//     calib_val[0] = -gemag[0] / tim_sum;
+	//     Log.d("gui_massb", "Werte Kalibrierung " + calib_val[0]);
+
+	//     Log.d("gui_massb", "gemag[1]" + gemag[1] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+	//     calib_val[1] = -gemag[1] / tim_sum;
+	//     Log.d("gui_massb", "gemag[2]" + gemag[2] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
+	//     Log.d("gui_massb", "Werte Kalibrierung " + calib_val[1]);
+	//     calib_val[2] = -gemag[2] / tim_sum;	
+	//     Log.d("gui_massb", "Werte Kalibrierung " + calib_val[2]);
+	//     // Rotationsmatrix als Klassenattribut speichern
+	//     for(int i = 0; i <3;i++){
+	//        for(int j = 0;j<3;j++){
+	// 	  koord[i][j] = rot[i+3*j];
+	//        }
+	//     } 
+	// }
+	// else{
+	//     throw new RuntimeException();
+	// }
     }
     private float[] rotspeed(float[] rotation, float[] speed){
 	// Umrechnen in globalen Koordination
@@ -144,7 +202,7 @@ public class mass{
 	    amemlast = amem;
 	    amem = new float[3];
 	    for(int i=0;i<len;i++){
-		valb.remove(i);
+	       valb.remove(0);
 	    }
 	    distance[3] = (float)Math.sqrt(distance[0]*distance[0]+distance[1]*distance[1]+
 					   distance[2]*distance[2]);    

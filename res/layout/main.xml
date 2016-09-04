@@ -1,0 +1,56 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	      tools:showIn="@layout/activity_my">
+  <TextView
+    android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:text="@string/Distx" />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:id="@+id/distx" />
+  <TextView
+    android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:text="@string/Disty" />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:id="@+id/disty" />
+  <TextView
+    android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:text="@string/Distz" />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:id="@+id/distz" />
+  <TextView
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:textSize="10dip"
+     android:numeric="decimal"
+     android:id="@+id/distc" />
+  <Button
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:text="@string/begend" 
+     android:onClick="startm"/>
+  
+</LinearLayout>
