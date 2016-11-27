@@ -1,0 +1,33 @@
+package eu.domob.angulo;
+
+import Massband.com;
+
+public class Messung extends LayerMessung{
+    /* Mess-Klasse als Zwischen-Instanz, um Messungen durchzufuehren
+     TextViews als Attribut der Klassen, diese werden dann aktualisiert
+     SensorEventListener aus AnguloBase rausnehmen*/
+
+    private TextView distances[]; /* TextView um Distanzen auszugeben */
+    private SchrittMessung Schritt;
+    public Messung(Context context, TextView[] distances){
+	super.LayerMessung(context);
+	this.distances = distances;	
+    }
+    @Override 
+    protected synchronized void get_sensors(Context context) throws RuntimeException{	
+	int MustHave[] = {Sensor.TYPE_ACCELEROMETER};
+	int Optional[] = new int[0];
+	super.get_sensors(context, MustHave, Optional);
+    }
+    @Override
+    protected void new_messung(String action){
+	ErsteMessung = true;
+	Berechnungsfunktionen = new mass(action, add);
+	Schritt = new BerechnungMessung();
+    }
+    @Override 
+    public void onSensorChanged(SensorEvent event) throws RuntimeException{
+	/*SensorWerte haben sich geaendert */
+	boolean AtEnd = Schritt.onSensorChanged(event);
+    }
+}
