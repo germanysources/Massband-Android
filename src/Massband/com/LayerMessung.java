@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,14 +15,19 @@ import java.lang.*;
 import android.util.Log;
 
 public abstract class LayerMessung implements SensorEventListener{
-   private final String trenn = ";", filename = "Massband.com.KalibrierungBeschleunigungSensor";
+    // Abspeichern der Kalibrierung    
+    
+    /** File-Name in der werden Kalibrierungswerte als SharedPreferences abgelegt **/
+    private final String filename = "Massband.com.KalibrierungBeschleunigungSensor";
+    
+    /** Kalibrierungswerte, wobei err der durchschnittle Fehler ist **/
+    public volatile float add[], err[];
 
-   // Allgemeine Funktion wie Abspeichern der Kalibrierung    
-   public volatile float add[], err[];
-   public volatile SensorManager sman;
-   
-   protected Context context;
-   protected volatile List<Sensor> sensors; 
+    public volatile SensorManager sman;   
+    protected SharedPreferences pref; 
+    protected Context context;
+    /** Sensoren **/
+    protected volatile List<Sensor> sensors; 
 
    public LayerMessung(Context context) throws RuntimeException, InterruptedException, FileNotFoundException, IOException {
       sensors = new ArrayList<Sensor>();
@@ -29,47 +35,55 @@ public abstract class LayerMessung implements SensorEventListener{
       this.add = new float[3];
       this.err = new float[3];
       this.context = context;	
-      new_messung("");
 
    }
+    /**
+     * Neue Messung anstossen
+     **/
     protected abstract void new_messung(String action);
-
-   public void load_calib(){
-      // try{
-      // 	 this.read_calib(add, err, context);
-      // }
-      // catch(RuntimeException e){
-      // 	  Erfolg ef = new Erfolg(e.getMessage(), context);
-      // 	  ef.show();
-	  calib_start();
-      // }   
- 
+    
+    /**
+     * Kalibrierungswerte laden
+     * @RuntimeException kein File gefunden
+     **/
+   public void load_calib() throws RuntimeException{
+       	 this.read_calib(add, err, context); 
    }
-
-    protected abstract void get_sensors(Context context) throws RuntimeException;
-
-   /*   public void calib_start(Context context) { 
-      // executor.execute(new Runnable() {
-      // 			  @Override
-      // 			  public void run() {
-      // 			     try {
-				// Kalibrieren
-				float[] init_a = {0, 0, 0};
-				// Log.d("gui_massb", "Thread begonnen\t" + Thread.currentThread());
-				mess_beg(mass.CALIB, init_a);
-	 // 		     } catch (RuntimeException e) {
-	 // 			Log.w("gui_massb", e.getMessage());
-	 // 		     }
-	 // 		  }
-	 // }
-	 // );
-	 }*/
-    public abstract void calib_start();
-
-    public abstract void calib_end(byte return_code);
-
+    
+    /**
+     * Sensoren ermitteln
+     * @context Interface zum GUI
+     * @MustHave Sensoren muessen vorhanden sein
+     * @Optional Optionale Sensoren
+     **/
+    protected void get_sensors(Context context, int[] MustHave, int[] Optional) throws RuntimeException{
+	sman = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
+	List<Sensor> AllSensor = sman.getSensorList(Sensor.TYPE_ALL);
+	for(int i=0;i<AllSensor.size();i++){
+	    for(int j:MustHave){
+		if(AllSensor.get(i).getType() == j){
+		    sensors.add(AllSensor.get(i));
+		}
+	    }
+	}
+	if(sensors.size() != MustHave.length){
+	    throws new RuntimeException("Nicht alle notwendigen Sensoren vorhanden");
+	}    
+	for(int i=0;i<AllSensor.size();i++){
+	    for(int j:Optional){
+		if(AllSensor.get(i).getType() == j){
+		    sensors.add(AllSensor.get(i));
+		}
+	    }
+	}
+    }
+    /**
+     * Kalibrierungsdaten aus SharedPreferences lesen
+     * @add zu Messwerten zu addieren
+     * @err durchschnittlicher Fehler
+     * @context fuer Android-App-Interface
+     **/
    public synchronized void read_calib(float[] add, float[] err, Context context) throws RuntimeException {
-      // Kalibrierungsdaten aus SharedPreferences lesen
        SharedPreferences sp = context.getSharedPreferences(filename,Context.MODE_PRIVATE);
        String key;       
        for(int i=0;i<add.length;i++){
@@ -89,31 +103,59 @@ public abstract class LayerMessung implements SensorEventListener{
 
    }
 
-    
-   public synchronized void mess_beg(String action) {
+    /**
+     * Messung beginnen
+     * @action was wird gemessen muss Konstante aus Klasse mass sein
+     **/
+   public synchronized void mess_beg(String action) throws RuntimeException{
       new_messung(action);
+      /* get type of Delay */
+      PreferenceManager.setDefaultValues (this, R.xml.preferences, false);
+      pref = PreferenceManager.getDefaultSharedPreferences (this);
+      final String rate = pref.getString ("rate", null);
+      int sensorRate;
+      if (rate.equals ("fastest"))
+	  sensorRate = SensorManager.SENSOR_DELAY_FASTEST;
+      else if (rate.equals ("game"))
+	  sensorRate = SensorManager.SENSOR_DELAY_GAME;
+      else if (rate.equals ("ui"))
+	  sensorRate = SensorManager.SENSOR_DELAY_UI;
+      else{
+	  assert (rate.equals ("normal"));
+	  sensorRate = SensorManager.SENSOR_DELAY_NORMAL;
+      }
+
       for(Sensor s:sensors) {
-	 boolean sevt = sman.registerListener(this, s, SensorManager.SENSOR_DELAY_GAME);
-	 Log.d("gui_massb", "Messung begonnen mit Aktion " + action);
+	 boolean sevt = sman.registerListener(this, s, sensorRate);
 	 if(sevt == false){
 	     throw new RuntimeException(context.getString(R.string.Ereg));
 	 }
       }
    }
-
-   public synchronized void mess_end() {
-      for(Sensor s:sensors){
-	 sman.unregisterListener(this, s);
-      }
-   }    
+    /**
+     * Messung beenden
+     **/
+    public synchronized void mess_end() {
+	for(Sensor s:sensors){
+	    sman.unregisterListener(this, s);
+	}
+    }    
+    /**
+     * Werte haben sich geaendert
+     **/ 
     public abstract void onSensorChanged(SensorEvent event)
 	throws RuntimeException;
-
+    
+    /**
+     * Genauigkeit geaendert, nicht notwendig
+     **/
     public void onAccuracyChanged(Sensor sensor, int accuracy){	
     }
-
-   public synchronized void write_calib(Context context){
-      // Kalibrierungsdaten und durchschnittlichen Messfehler als SharedPreferences speichern
+    
+    /**
+     * Kalibrierungsdaten und durchschnittlichen Messfehler als SharedPreferences speichern     
+     **/
+    public synchronized void write_calib(Context context){
       
        String key;
        SharedPreferences sp = context.getSharedPreferences(filename,Context.MODE_PRIVATE);
