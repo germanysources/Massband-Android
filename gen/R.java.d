@@ -1,0 +1,19 @@
+C:\Users\gerbershagenj\Massband\MAssband-Android\gen\Massband\com\R.java \
+ : C:\Users\gerbershagenj\Massband\MAssband-Android\res\drawable-hdpi\ic_launcher.png \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\drawable-ldpi\ic_launcher.png \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\drawable-mdpi\ic_launcher.png \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\drawable-xhdpi\ic_launcher.png \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\about.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\classic.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\help_classic.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\help_massband.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\help_triangulo.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\main.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\set_height.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout\triangulo.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\layout-land\classic.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\menu\main.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\values\arrays.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\values\strings.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\res\xml\preferences.xml \
+C:\Users\gerbershagenj\Massband\MAssband-Android\bin\AndroidManifest.xml \
