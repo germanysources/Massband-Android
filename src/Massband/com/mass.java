@@ -6,31 +6,20 @@ import android.hardware.SensorManager;
 import android.util.Log;
 import android.content.Context;
 
+/**
+ * Berechnungsfunktionen fuer Kalibrierung Accelormeter
+ **/
 public class mass{
-    public final static String CALIB = "C", SPEEDM = "S", DISTANCEM = "D";//was wird gemessen	  
 
     Context context;
 
-    float calib_val[] = {0, 0, 0}; // Kalibrierungswerte
-    float distance[] = new float[4];
-    float speed[] = new float[3];
-    float distancePart[] = new float[3];
-    float amem[] = new float[3]; //Zwischenspeicher durchschnitt Beschleunigung
-    float amemlast[] = new float[3];//Zwischenspeicher durchschnitt Beschleunigung letzte Messungen
-    float timSumMem;
-    float tim_sum = 0; // Zeitsumme nach jeder Messung in Sekunden
-    String action;
-    
-    public mass(String action, float[] calib_val, Context c){
-	distance = new float[4];
+    private float speed[] = new float[3]; // Geschwindigkeit summiert 
+    private float tim_sum = 0; // Zeitsumme nach jeder Messung in Sekunden
+    private static float koord[][] = {{1, 0, 0},{0,1,0},{0,0,1}};//Umrechnungsmatrix in Spalten    
+
+    public mass(Context c){
 	speed = new float[3];
-	distancePart = new float[3];
-	amem = new float[3];
-	amemlast = new float[3];
 	tim_sum = 0;
-	timSumMem = 0;
-	this.calib_val = calib_val;
-	this.action = action;
 	context = c;
    }
     public void calibs(List<float[]> valb, float deltime) throws
@@ -78,21 +67,18 @@ public class mass{
       return ret;
    }
 
-    public void calib_end() throws RuntimeException{ 
+    public float[] calib_end() throws RuntimeException{ 
+	/* Kalibrierung beenden */
+	float calib_val[] = new float[3];
        for(int i = 0; i<3;i++){
 	  calib_val[i] = speed[i] / tim_sum;
        }
        float[] rot = berechneRotationsmatrix(calib_val);
        float[] gemag = new float[3];
-       Log.d("gui_massb", "Geschwindigkeit");
        gemag = rotspeed(rot, speed);
-       Log.d("gui_massb", "gemag[0]" + gemag[0] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
        calib_val[0] = -gemag[0] / tim_sum;
        Log.d("gui_massb", "Werte Kalibrierung " + calib_val[0]);
-
-       Log.d("gui_massb", "gemag[1]" + gemag[1] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
        calib_val[1] = -gemag[1] / tim_sum;
-       Log.d("gui_massb", "gemag[2]" + gemag[2] + "\t" + tim_sum + "\t" + System.currentTimeMillis());
        Log.d("gui_massb", "Werte Kalibrierung " + calib_val[1]);
        calib_val[2] = -gemag[2] / tim_sum;	
        Log.d("gui_massb", "Werte Kalibrierung " + calib_val[2]);
@@ -102,7 +88,7 @@ public class mass{
 	     koord[i][j] = rot[i+3*j];
 	  }
        }
-
+       return calib_val;
     }
     private float[] rotspeed(float[] rotation, float[] speed){
 	// Umrechnen in globalen Koordination
@@ -115,49 +101,7 @@ public class mass{
 	}
 	return urspeed;
     }
-    private float getCalibVal(int i){
-	//Kalibrierungswert holen
-	return calib_val[i];
-    }
-    public void inte_beschl(List<float[]> valb, float deltime){
-	//Beschleunigung zum Weg integrieren mit Zwischenmittelwerte
-	//erst die Zwischenwerte der Beschleunigung (Anzahl LengthSensorValues) bilden und dann integrieren
-	//deltime: Zeitdifferenz zwischen den Messungen
-	int len = valb.size() - 1;
-	float be1[] = beschl(valb.get(len - 1));
-	float be2[] = beschl(valb.get(len));
-	for(int i=0;i<3;i++){
-	    be1[i] += getCalibVal(i);
-	    be2[i] += getCalibVal(i);
-	}
-	timSumMem += deltime;
-	for(int i=0;i<3;i++){
-	    amem[i] += 0.5f*(be1[i]+be2[i])*deltime;
-	}
-	if(len % LengthSensorValues == 0){
-	    tim_sum += timSumMem;
-	    for(int i=0;i<3;i++){
-		speed[i] += amem[i];
-		amem[i] /= timSumMem;
-		distancePart[i] += 0.5f*(amemlast[i]*(tim_sum-timSumMem)+amem[i]*tim_sum)*timSumMem;
-		distance[i] = tim_sum*speed[i] - distancePart[i];
-	    }
-	    // Test-Methode
-	    test_log(valb);
-	    //Variablen initialisieren
-	    timSumMem = 0;
-	    amemlast = amem;
-	    amem = new float[3];
-	    for(int i=0;i<len;i++){
-	       valb.remove(0);
-	    }
-	    distance[3] = (float)Math.sqrt(distance[0]*distance[0]+distance[1]*distance[1]+
-					   distance[2]*distance[2]);    
-	}
-	
-    }
 
-    private static float koord[][] = {{1, 0, 0},{0,1,0},{0,0,1}};//Umrechnungsmatrix in Spalten
     public float[] beschl(float[] sens_val){
 	// Beschleunigung in Ursprungskoordinaten
 	// sens_val: Beschleunigung vom Sensor
@@ -168,6 +112,7 @@ public class mass{
 	}
 	return ret;
     }
+
     public void dreh(float[] sens_valb, float deltime){
 	// Bei Drehung neues Koordinationsystem auf altes umrechnen
 	float newc[][] = new_coord(sens_valb, deltime);
@@ -177,6 +122,7 @@ public class mass{
 	    } 
 	}       
     }
+
     private float[][] new_coord(float[] sens_val, float deltime){
 	// Bei Drehung auf neue Koordinaten umrechnen
 	// sens_val: Winkelgeschwindigkeit

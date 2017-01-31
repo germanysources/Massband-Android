@@ -1,3 +1,0 @@
-class lanege_messen{
-    
-}

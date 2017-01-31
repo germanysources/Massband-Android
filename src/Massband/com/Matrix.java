@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package eu.domob.angulo;
+package Massband.com;
 
 /* A very simple matrix class for my rotation matrix investigations.  */
 public class Matrix

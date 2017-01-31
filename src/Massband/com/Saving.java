@@ -1,25 +1,26 @@
+package Massband.com;
+
+import java.util.*;
+import java.io.*;
+import java.lang.*;
+import android.content.Context;
+
 /*
-  Speichern in SQL-Lite Datenbank Android
+  Bilder in File-System speichern
  */
 public class Saving{
     
-    private final String DATEITYP = 'JPG';
+    private final String DATEITYP = "JPG";
     private Context context;
     public Saving(Context context){
 	this.context = context;
-	createTable();
     }
-    private void CreateTable{
-	//Tabellen erstellen
-	// Spalten: long Zeit(Key), Kurztext(Key), Projekt(Index) float Distanz X, Y,Z, 	
-	// das Bild gesondert auf File-System als normale Datei ablegen
-	// mit Dateinamen Schluessel von Datensatz
-    }
+
     public void InsertMessung(String text, String Projekt, float[] distance, String bild)
 	throws IOException, FileNotFoundException, RuntimeException{
 	//neue Messung in Datenbank ablegen
 	//commit work nur wenn Datei erfolgreich geschrieben
-	long timestamp = System.getCurrentInMillis();
+	long timestamp = System.currentTimeMillis();
 	boolean overwrite = true;
 	
 	// SQL Insert
@@ -39,9 +40,9 @@ public class Saving{
 	    overwrite = false;
 	}
 	if(overwrite){
-	    // Bestätigung das File ueberschrieben werden soll
+	    // Bestaetigung das File ueberschrieben werden soll
 	}
-	outputStream = context.openFileOutput(filename, Context.MODE_PUBLIC);
+	outputStream = context.openFileOutput(filename, Context.MODE_PRIVATE);
 	outputStream.write(bild.getBytes());
 	outputStream.close();
     }    

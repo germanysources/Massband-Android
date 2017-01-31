@@ -1,6 +1,9 @@
-package eu.domob.angulo;
+package Massband.com;
 
-public interface SchrittMessung{
+public abstract class AttrSchrittMessung{
+    
+    /** Umrechnung Nanosekunden in Sekunden (Zeitstempel des Sensors sind in Nanosekunden **/
+    protected final float NanoToSek = 1E-9f;
 
     protected boolean ErsteMessung;
     protected mass Berechnungsfunktionen;
@@ -8,8 +11,4 @@ public interface SchrittMessung{
     protected long TimeStamp; //Zeitstempel diese Messung
     protected long TimeStampBegin; //Zeitstempel letzte Messung
 
-    public boolean OnSensorChanged(SensorEvent event)
-	throws RuntimeException;
-    public void Ende() throws RuntimeException;
-    public mass getFunktionen();
 }

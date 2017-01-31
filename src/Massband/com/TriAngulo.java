@@ -52,7 +52,7 @@ public class TriAngulo extends AnguloBase
     /** Laenge letzter Messung **/
     private float length;
     /** true, if length was hold **/
-    private float LengthIsSet;
+    private boolean LengthIsSet;
 	
     /**
      * Construct it with the proper help dialog IDs.
@@ -78,21 +78,23 @@ public class TriAngulo extends AnguloBase
 	distance = (TextView) findViewById (R.id.distance);
 	info = (TextView) findViewById (R.id.info);
 	mess = new TriAnguloMessung(this, kmess);
-	mess.get_sensors((Context) this);
     }
     @Override
-	public void onStart(){
+    public void onStart(){
+	super.onStart();
 	startKalibrierung();
     }
 
     @Override
-	public void onResume(){
+    public void onResume(){
 	super.onResume();
+	// wird abgewartet bis Kalibrierung fertig ist?
 	startMessung();
 	
     }
     @Override
     public void onPause(){
+	super.onPause();
 	endMessung();
     }
     /**
@@ -108,11 +110,11 @@ public class TriAngulo extends AnguloBase
     /**
      * Laenge aus Messung setzen
      **/
-    public void setLastState(float length; boolean isHeight){
+    public void setLastState(float length, boolean isHeight){
 	String fmt = getString (R.string.measure_distance);
-	distance.setText (String.format (fmt, dist));
+	distance.setText (String.format (fmt, length));
 	fmt = getString (R.string.measure_info);
-	info.setText (String.format (fmt, height));
+	info.setText (String.format (fmt, getHeight()));
 
 	if(LengthIsSet){
 	    return;

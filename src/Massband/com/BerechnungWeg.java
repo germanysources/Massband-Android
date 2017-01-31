@@ -1,21 +1,20 @@
 package Massband.com;
 
 import android.hardware.*;
+import android.content.Context;
 
-public class BerechnungWeg implements SchrittMessung{
+public class BerechnungWeg extends AttrSchrittMessung implements SchrittMessung{
     /* Messung mittels Integration Beschleunigungssensor */
 
     /** Anzahl Messungen werden jeweils gemittelt **/
     private final int AnzahlMess = 10;
-    /** Umrechnung Nanosekunden in Sekunden (Zeitstempel des Sensors sind in Nanosekunden **/
-    private final float NanoToSek = 1E-9f;
 
     private KalibrierungMessung kalibrierung; 
     private MassbandGui GuiInterface;
     /** Buffer fuer Beschleunigungswerte **/
-    private Buffer[];
+    private float Buffer[];
     /** Historie Buffer **/
-    private LetzterBuffer[];
+    private float LetzterBuffer[];
     /** Anzahl Messung **/
     private int zaehler;
     /** Distanz **/
@@ -42,7 +41,7 @@ public class BerechnungWeg implements SchrittMessung{
 	LetzterBuffer = new float[3];
 	Distance = new float[4];
 	PartDistance = new float[3];
-	Berechnungsfunktionen = new mass(mass.DISTANCEM, kalibrierung.add, (Context) gui);
+	Berechnungsfunktionen = new mass((Context) gui);
     }
     
     @Override
@@ -54,7 +53,7 @@ public class BerechnungWeg implements SchrittMessung{
 	case Sensor.TYPE_GYROSCOPE:
 	    return GyroScopeChanged(event);
 	default:
-	    throws RuntimeException(); //unbekannter Sensor
+	    throw new RuntimeException(((Context)GuiInterface).getString(R.string.ESensorType)); //unbekannter Sensor
 	}
 	
     }
@@ -63,36 +62,37 @@ public class BerechnungWeg implements SchrittMessung{
 	/* Sensor-Werte des Accelerometers haben sich geaendert */
 	if(!ErsteMessung){	    
 	    for(int i=0;i<Buffer.length;i++){
-		Buffer[i] += (LetzteMessung[i] + event.values[i])*(evt.timestamp - TimeStamp) * NanoToSek;		
+		Buffer[i] += (LetzteMessung[i] + event.values[i])*(event.timestamp - TimeStamp) * NanoToSek;		
 	    }
-	    TimeStamp = evt.timestamp;
+	    TimeStamp = event.timestamp;
 	}else{
 	    ErsteMessung = false;
-	    TimeStamp = evt.timestamp;
-	    TimeStampBegin = evt.timestamp;
+	    TimeStamp = event.timestamp;
+	    TimeStampBegin = event.timestamp;
 	}
 	LetzteMessung = event.values;
 	zaehler++;
 	if(zaehler % AnzahlMess == 0 && !ErsteMessung){
 	    /* Mittelwert aus den Buffer-Werten bilden */
 	    float DifferenzTime = TimeStamp - TimeStampBegin;
-	    newDirection(Buffer);
+	    NewDirection(DifferenzTime);
 	    TimeStampBegin = TimeStamp;
 	    Buffer = new float[3];
 	}
+	return false;
     }
-    private void NewDirection(float DifferenzTime) throws RuntimException{
+    private void NewDirection(float DifferenzTime) throws RuntimeException{
 	/* Neuen Weg berechnen, dazu die Beschleunigungswerte
 	 zweimal integrieren */	
 	float GlobalValues[] = Berechnungsfunktionen.beschl(Buffer); // Umrechnen lokale in globale Beschleunigung
 	SumTime += DifferenzTime;
-	for(int i=0;i<DistancePart.length;i++){
+	for(int i=0;i<PartDistance.length;i++){
 	    speed[i] += GlobalValues[i];
 	    GlobalValues[i] = GlobalValues[i] / (2*DifferenzTime) + kalibrierung.add[i];
 	    PartDistance[i] = (LetzterBuffer[i]*(SumTime-DifferenzTime) + GlobalValues[i]*SumTime)* DifferenzTime;	
 	    Distance[i] = SumTime*speed[i] - PartDistance[i];
 	}
-	Distance[3] = Math.sqrt(Distance[0]*Distance[0] + Distance[1]*Distance[1] + Distance[2]*Distance[2]);
+	Distance[3] = (float)Math.sqrt(Distance[0]*Distance[0] + Distance[1]*Distance[1] + Distance[2]*Distance[2]);
 	GuiInterface.setDistance(Distance);
 	LetzterBuffer = GlobalValues;
 	
@@ -104,12 +104,21 @@ public class BerechnungWeg implements SchrittMessung{
      **/
     private boolean GyroScopeChanged(SensorEvent event){
 	if(ErsteMessungGyro){
-	    !ErsteMessungGyro;
+	    ErsteMessungGyro = !ErsteMessungGyro;
 	    TimeStampGyroScope = event.timestamp;
 	}else{
 	    float DeltaTime = (event.timestamp - TimeStampGyroScope)*NanoToSek;
 	    Berechnungsfunktionen.dreh(event.values, DeltaTime);
 	}
+	return false;
     }
     
+    @Override
+    public float[] Ende(){
+	return new float[0];
+    }
+    @Override
+    public mass getFunktionen(){
+	return Berechnungsfunktionen;
+    }
 }

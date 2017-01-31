@@ -1,0 +1,20 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	      tools:showIn="@layout/activity_my">
+  <Button
+     android:id="@+id/massband"
+     android:layout_width="wrap_content"
+     android:layout_heigth="wrap_content"
+     android:background="@drawable-mdpi/massband" /><!-- Bild muss Namen massband.9.png haben -->
+  <Button
+     android:id="@+id/triangulo"
+     android:layout_width="wrap_content"
+     android:layout_heigth="wrap_content"
+     android:background="@drawable-mdpi/triangulo" />
+
+</LinearLayout>
+     

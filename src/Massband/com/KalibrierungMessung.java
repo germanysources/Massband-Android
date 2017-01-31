@@ -4,6 +4,7 @@ import java.util.*;
 import java.lang.*;
 import android.content.Context;
 import android.hardware.SensorEvent;
+import android.hardware.Sensor;
 
 public class KalibrierungMessung extends LayerMessung{
     /* Kalibrierungs-Klasse als Zwischen-Instanz, um Kalibrierung und Messungen durchzufuehren*/
@@ -11,9 +12,9 @@ public class KalibrierungMessung extends LayerMessung{
     private SchrittMessung Schritt;
     public boolean isInAction;
     public KalibrierungMessung(Context context){	
-	super.LayerMessung(context);	
-    }
-    @Override 
+	super(context);
+	get_sensors(context);
+    }     
     protected synchronized void get_sensors(Context context) throws RuntimeException{	
 	int MustHave[] = {Sensor.TYPE_ACCELEROMETER};
 	int Optional[] = new int[0];
@@ -21,28 +22,27 @@ public class KalibrierungMessung extends LayerMessung{
     }
     @Override
     protected void new_messung(){
-	Schritt = new BerechnungKalibrierung();
+	Schritt = new BerechnungKalibrierung(context);
     }
     @Override
     public synchronized void mess_beg(){
 	isInAction = true;
-	super.mess_beg(mass.CALIB);
+	super.mess_beg();
     }
-    @Override
+    //@Override
     public synchronized void mess_end(RuntimeException exp){
 	/* Kalibrierung beenden */
-	!isInAction;
+	isInAction = !isInAction;
 	super.mess_end(); // SensorEventListener ausschalten
 	
 	if(exp == null){
 	    try{
-		Schritt.Ende();
+		add = Schritt.Ende();
 	    }catch(RuntimeException e){
 		Fehler fe = new Fehler(context.getString(R.string.Ecalib), context);
 		fe.show();
 		return;
 	    }
-	    add = Schritt.getFunktionen().calib_val;
 	    try{
 		write_calib(context); // Als SharedPreferences ablegen
 	    }
@@ -63,7 +63,7 @@ public class KalibrierungMessung extends LayerMessung{
     public void onSensorChanged(SensorEvent event) throws RuntimeException{
 	/*SensorWerte haben sich geaendert */
 	try{
-	    AtEnd = Schritt.onSensorChanged(event);
+	    boolean AtEnd = Schritt.OnSensorChanged(event);
 	    if(AtEnd){
 		/*Kalibrierung ist beendet */
 		mess_end(null);

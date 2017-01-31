@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package eu.domob.angulo;
+package Massband.com;
 
 import android.hardware.Sensor;
 
@@ -31,7 +31,7 @@ import android.widget.TextView;
 /**
  * Main activity for the "classic" version of Angulo.
  */
-public class AnguloClassic extends AnguloBase
+public class AnguloClassic extends AnguloBaseEasy
 {
 
   private Vibrator vibrator;

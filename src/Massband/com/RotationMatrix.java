@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package eu.domob.angulo;
+package Massband.com;
 
 /* Routines especially for rotation matrices.  */
 public class RotationMatrix extends Matrix

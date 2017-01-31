@@ -16,14 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package eu.domob.angulo;
+package Massband.com;
 
 import android.app.Activity;
 import android.app.Dialog;
 
 import android.content.Intent;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.preference.PreferenceManager;
 
 import android.os.Bundle;
 
@@ -59,9 +61,11 @@ public abstract class AnguloBase extends Activity
     /** Resource ID for help dialog link element.  */
     private final int helpLink;
     /** Kalibrierungsmethoden **/
-    protected KalbrierungsMessung kmess;
+    protected KalibrierungMessung kmess;
     /** Messmethoden **/
     protected LayerMessung mess;
+    /** Preferences object used.  */
+    protected SharedPreferences pref;
        
 
   /**
@@ -86,6 +90,7 @@ public abstract class AnguloBase extends Activity
   {
     super.onCreate (savedInstanceState);
     kmess = new KalibrierungMessung((Context) this);
+    pref = PreferenceManager.getDefaultSharedPreferences(this);
     /* Layout is not initialised, this is left to the child classes.  */
   }
   /**
@@ -128,7 +133,7 @@ public abstract class AnguloBase extends Activity
     public void startMessung(){
 	// darf nicht gerade am Kalibrieren sein
 	if(kmess.isInAction){
-	    Fehler fe = new Fehler(R., this);
+	    Fehler fe = new Fehler(getString(R.string.Estart), this);
 	    fe.show();
 	    return;
 	}

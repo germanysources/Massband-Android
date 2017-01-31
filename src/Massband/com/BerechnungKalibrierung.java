@@ -3,16 +3,18 @@ package Massband.com;
 import java.lang.*;
 import java.util.*;
 import android.hardware.SensorEvent;
+import android.content.Context;
 
-public class BerechnungKalibrierung implements SchrittMessung{
+public class BerechnungKalibrierung extends AttrSchrittMessung implements SchrittMessung{
+    /* Berechnungen waehrend Kalibrierung durchfuehren */
     private final int MaxZaehler = 200; /* Anzahl Messungen Kalibrierung */
     private int Zaehler;
     private List<float[]> ForceValues;
     
-    public BerechnungKalibrierung(String action){
+    public BerechnungKalibrierung(Context context){
 	/* */
 	ErsteMessung = true;
-	Berechnungsfunktionen = new mass(action, new float[3]);
+	Berechnungsfunktionen = new mass(context);
 	ForceValues = new LinkedList<float[]>();
 	Zaehler = 0;
     }
@@ -22,11 +24,11 @@ public class BerechnungKalibrierung implements SchrittMessung{
 	/* Aenderung in ForceValues aufnehmen */
 	ForceValues.add(event.values);
 	if(ErsteMessung){
-	    !ErsteMessung;
+	    ErsteMessung = !ErsteMessung;
 	    TimeStamp = event.timestamp;
 	}
-	float DeltaTime = (event.timestamp - timestamp)*nanoumr;
-	timestamp = event.timestamp;
+	float DeltaTime = (event.timestamp - TimeStamp)*NanoToSek;
+	TimeStamp = event.timestamp;
 	Berechnungsfunktionen.calibs(ForceValues, DeltaTime);
 	Zaehler++;
 	if(Zaehler > MaxZaehler){
@@ -35,9 +37,9 @@ public class BerechnungKalibrierung implements SchrittMessung{
 	return false;
     }
     @Override
-    public void Ende() throws RuntimeException{
+    public float[] Ende() throws RuntimeException{
 	/* Kalbrierung beenden */
-	Berechnungsfunktionen.calib_end();
+	return Berechnungsfunktionen.calib_end();
     }
     public mass getFunktionen(){
 	return Berechnungsfunktionen;

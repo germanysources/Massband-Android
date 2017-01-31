@@ -1,3 +1,4 @@
+
 package Massband.com;
 
 import java.io.*;
@@ -15,7 +16,7 @@ import java.lang.*;
 import android.util.Log;
 
 public abstract class LayerMessung implements SensorEventListener{
-    // Abspeichern der Kalibrierung    
+    // Lesen, Abspeichern der Kalibrierung    
     
     /** File-Name in der werden Kalibrierungswerte als SharedPreferences abgelegt **/
     private final String filename = "Massband.com.KalibrierungBeschleunigungSensor";
@@ -29,9 +30,8 @@ public abstract class LayerMessung implements SensorEventListener{
     /** Sensoren **/
     protected volatile List<Sensor> sensors; 
 
-   public LayerMessung(Context context) throws RuntimeException, InterruptedException, FileNotFoundException, IOException {
+   public LayerMessung(Context context){
       sensors = new ArrayList<Sensor>();
-      this.get_sensors(context);
       this.add = new float[3];
       this.err = new float[3];
       this.context = context;	
@@ -40,7 +40,7 @@ public abstract class LayerMessung implements SensorEventListener{
     /**
      * Neue Messung anstossen
      **/
-    protected abstract void new_messung(String action);
+    protected abstract void new_messung();
     
     /**
      * Kalibrierungswerte laden
@@ -67,7 +67,7 @@ public abstract class LayerMessung implements SensorEventListener{
 	    }
 	}
 	if(sensors.size() != MustHave.length){
-	    throws new RuntimeException("Nicht alle notwendigen Sensoren vorhanden");
+	    throw new RuntimeException(context.getString(R.string.Esensor));
 	}    
 	for(int i=0;i<AllSensor.size();i++){
 	    for(int j:Optional){
@@ -107,11 +107,11 @@ public abstract class LayerMessung implements SensorEventListener{
      * Messung beginnen
      * @action was wird gemessen muss Konstante aus Klasse mass sein
      **/
-   public synchronized void mess_beg(String action) throws RuntimeException{
-      new_messung(action);
+   public synchronized void mess_beg() throws RuntimeException{
+      new_messung();
       /* get type of Delay */
-      PreferenceManager.setDefaultValues (this, R.xml.preferences, false);
-      pref = PreferenceManager.getDefaultSharedPreferences (this);
+      PreferenceManager.setDefaultValues (context, R.xml.preferences, false);
+      pref = PreferenceManager.getDefaultSharedPreferences (context);
       final String rate = pref.getString ("rate", null);
       int sensorRate;
       if (rate.equals ("fastest"))

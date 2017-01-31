@@ -4,13 +4,13 @@ import java.lang.*;
 import java.util.*;
 import android.hardware.SensorEvent;
 
-public class BerechnungMessung implements SchrittMessung{
+public class BerechnungMessung extends AttrSchrittMessung implements SchrittMessung{
     /* Normale Messung mit Triangulation */
     private final int AnzahlMess = 10;
     
     private KalibrierungMessung kalibrierung;
     private TriAngulo GuiInterface;
-    private Buffer[];
+    private float Buffer[];
     private int zaehler;
     public BerechnungMessung(KalibrierungMessung kalibrierung, TriAngulo gui){
 	/*  */
@@ -25,27 +25,28 @@ public class BerechnungMessung implements SchrittMessung{
 	/* Sensor-Werte haben sich geaendert */
 	if(!ErsteMessung){	    
 	    for(int i=0;i<Buffer.length;i++){
-		Buffer[i] += (LetzteMessung[i] + event.values[i])*(evt.timestamp - TimeStamp);		
+		Buffer[i] += (LetzteMessung[i] + event.values[i])*(event.timestamp - TimeStamp);		
 	    }
-	    TimeStamp = evt.timestamp;
+	    TimeStamp = event.timestamp;
 	}else{
-	    TimeStamp = evt.timestamp;
+	    TimeStamp = event.timestamp;
 	    ErsteMessung = false;
-	    TimeStampBegin = evt.timestamp;
+	    TimeStampBegin = event.timestamp;
 	}
 	LetzteMessung = event.values;
 	zaehler++;
 	if(zaehler % AnzahlMess == 0 && !ErsteMessung){
 	    /* Mittelwert aus den Buffer-Werten bilden */
 	    for(int i=0;i<Buffer.length;i++){
-		Buffer[i] = Buffer[i]/(2*(TimeStamp - TimeStampBeginn)) + kalibrierung.add[i];
+		Buffer[i] = Buffer[i]/(2*(TimeStamp - TimeStampBegin)) + kalibrierung.add[i];
 	    }
-	    newDirection(new Vector(Buffer));
+	    NewDirection(new Vector(Buffer));
 	    TimeStampBegin = TimeStamp;
 	    Buffer = new float[3];
 	}
+	return false;
     }
-    private void NewDirection(Vector val) throws RuntimException{
+    private void NewDirection(Vector val) throws RuntimeException{
     /* We use a rectangular triangle for triangulation:  The horizontal floor
        up to the focused point, the orthogonal side corresponding to the user's
        height, and then the unknown / measured angle.  Thus the reference
@@ -61,7 +62,7 @@ public class BerechnungMessung implements SchrittMessung{
 	    {
 		/* andere Kalkulation jetzt wird Hoehe aus Laenge und Winkel bestimmt
 		   tan(angle - pi/2)*leng=x */
-		dist = GuiInterface.getLength() * Math.tan(angle - Math.PI/2.0);
+		dist = GuiInterface.getLength() * (float)Math.tan(angle - Math.PI/2.0);
 		isHeight = true;
 	    }
 	else{
@@ -72,10 +73,19 @@ public class BerechnungMessung implements SchrittMessung{
 	*/
 
 	    final float height = GuiInterface.getHeight ();
-	    dist = height / Math.tan (Math.PI / 2.0 - angle);
+	    dist = height / (float)Math.tan (Math.PI / 2.0 - angle);
 	    isHeight = false;
 	}
 	GuiInterface.setLastState(dist, isHeight);
     }  
 
+    @Override
+	public float[] Ende(){
+	return new float[0];
+    }
+
+    @Override
+    public mass getFunktionen(){
+	return null;
+    }
 }
