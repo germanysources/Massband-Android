@@ -7,4 +7,6 @@ mittels Android darstellen.
 Im Moment sind wir gerade dabei den Beschleunigungssensor
 2mal zu integrieren und daraus den Weg zu berechnen.
 Hier wollten wir auch die Angulo-App noch integrieren,
-wo der Abstand ueber Trinagulation bestimmt wird.
+wo der Abstand ueber Triangulation bestimmt wird.
+
+
