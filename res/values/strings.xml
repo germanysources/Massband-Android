@@ -19,6 +19,7 @@
 -->
   <string name="begend">Beginn/Ende</string>
   <string name="app_name">Angulo Messungen</string>
+  <string name="app_name_massband">Massband</string>
   <string name="Ecalib">Waehrend Kalibrierung Handy bitte nicht bewegen</string>
   <string name="Ecalib_end">Waehrend Kalibrierung Handy bitte nicht bewegen. Sonst koennen die Werte nicht ermittelt werden.</string>
   <string name="Esensor">Sensoren fehlen. Die App braucht mindestens ein Beschleunigungssensor, noch besser ist ein Gyrosscope. Damit wird die Messung genauer.</string>

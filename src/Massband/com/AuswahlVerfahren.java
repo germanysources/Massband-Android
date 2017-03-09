@@ -1,15 +1,20 @@
 package Massband.com;
 
-import android.content.Intent;
-import android.content
+import android.content.*;
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.View;
+import java.lang.*;
 
 public class AuswahlVerfahren extends Activity{
     /**
      * Bietet die Verfahrensauswahl aus, welche Messmethode soll gewaehlt werden
      **/    
     Intent MethodChooser;
-    TriAngulo triAng;
-    MassbandGui mass;
+    public final String TriAng = "TriAngulo",
+	mass = "MassbandGui";
+    /*    TriAngulo TriAng;
+	  MassbandGui mass;*/
     
     public void onCreate(Bundle savedInstanceState){
 	super.onCreate(savedInstanceState);
@@ -19,18 +24,16 @@ public class AuswahlVerfahren extends Activity{
     /**
      * Auwahl TriAngulo Messung
      **/
-    public void onTriAnguloClicked(){
-	TriAng = new TriAngulo();
-	MethodChooser = new Intent((Context)this, triang);
+    public void onTriAnguloClicked() throws ClassNotFoundException{
+	MethodChooser = new Intent((Context)this, Class.forName(TriAng));
 	startActivity(MethodChooser);
     }
 
     /**
      * Auswahl Massband Messung
      **/
-    public void onMassbandClicked(){
-	mass = new MassbandGui();
-	MethodChooser = new Intent((Context)this, mass);
+    public void onMassbandClicked() throws ClassNotFoundException{
+	MethodChooser = new Intent((Context)this, Class.forName(mass));
 	startActivity(MethodChooser);	    
     }
 
